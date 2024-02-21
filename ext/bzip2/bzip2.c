@@ -57,11 +57,6 @@ VALUE bz_compress(VALUE self, VALUE str) {
 
     str = rb_str_to_str(str);
     bz2 = rb_funcall2(bz_cWriter, id_new, 1, argv);
-    if (OBJ_TAINTED(str)) {
-        struct bz_file *bzf;
-        Data_Get_Struct(bz2, struct bz_file, bzf);
-        OBJ_TAINT(bzf->io);
-    }
     bz_writer_write(bz2, str);
     return bz_writer_close(bz2);
 }
@@ -171,7 +166,7 @@ void Init_bzip2() {
     /*
       Writer
     */
-    bz_cWriter = rb_define_class_under(bz_mBzip2, "Writer", rb_cData);
+    bz_cWriter = rb_define_class_under(bz_mBzip2, "Writer", rb_cObject);
 #if HAVE_RB_DEFINE_ALLOC_FUNC
     rb_define_alloc_func(bz_cWriter, bz_writer_s_alloc);
 #else
@@ -197,7 +192,7 @@ void Init_bzip2() {
     /*
       Reader
     */
-    bz_cReader = rb_define_class_under(bz_mBzip2, "Reader", rb_cData);
+    bz_cReader = rb_define_class_under(bz_mBzip2, "Reader", rb_cObject);
     rb_include_module(bz_cReader, rb_mEnumerable);
 #if HAVE_RB_DEFINE_ALLOC_FUNC
     rb_define_alloc_func(bz_cReader, bz_reader_s_alloc);
@@ -238,7 +233,7 @@ void Init_bzip2() {
     /*
       Internal
     */
-    bz_cInternal = rb_define_class_under(bz_mBzip2, "InternalStr", rb_cData);
+    bz_cInternal = rb_define_class_under(bz_mBzip2, "InternalStr", rb_cObject);
 #if HAVE_RB_DEFINE_ALLOC_FUNC
     rb_undef_alloc_func(bz_cInternal);
 #else

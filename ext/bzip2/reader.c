@@ -235,9 +235,6 @@ VALUE bz_reader_init(int argc, VALUE *argv, VALUE obj) {
         small = RTEST(b);
     }
     rb_io_taint_check(a);
-    if (OBJ_TAINTED(a)) {
-        OBJ_TAINT(obj);
-    }
     if (rb_respond_to(a, id_read)) {
         if (TYPE(a) == T_FILE) {
 #ifndef RUBY_19_COMPATIBILITY
@@ -312,9 +309,6 @@ VALUE bz_reader_read(int argc, VALUE *argv, VALUE obj) {
         return Qnil;
     }
     res = rb_str_new(0, 0);
-    if (OBJ_TAINTED(obj)) {
-        OBJ_TAINT(res);
-    }
     if (n == 0) {
         free(bzf->buf);
         return res;
@@ -447,7 +441,6 @@ VALUE bz_reader_gets(VALUE obj) {
         str = bz_read_until(bzf, "\n", 1, 0);
         if (!NIL_P(str)) {
             bzf->lineno++;
-            OBJ_TAINT(str);
         }
     }
     return str;
@@ -512,7 +505,6 @@ VALUE bz_reader_gets_internal(int argc, VALUE *argv, VALUE obj, int *td, int ini
 
     if (!NIL_P(res)) {
         bzf->lineno++;
-        OBJ_TAINT(res);
     }
     return res;
 }

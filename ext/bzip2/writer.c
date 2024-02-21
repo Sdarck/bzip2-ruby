@@ -368,7 +368,7 @@ VALUE bz_writer_init(int argc, VALUE *argv, VALUE obj) {
             }
             bziv->bz2 = obj;
         } else {
-            iv = Data_Make_Struct(rb_cData, struct bz_iv, 0, free, bziv);
+            iv = Data_Make_Struct(rb_cObject, struct bz_iv, 0, free, bziv);
             bziv->io = a;
             bziv->bz2 = obj;
             rb_ary_push(bz_internal_ary, iv);
