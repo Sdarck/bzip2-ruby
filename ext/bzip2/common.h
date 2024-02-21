@@ -4,12 +4,7 @@
 #include <ruby.h>
 #include <bzlib.h>
 
-#ifndef RUBY_19_COMPATIBILITY
-#  include <rubyio.h>
-#  include <version.h>
-#else
-#  include <ruby/io.h>
-#endif
+#include <ruby/io.h>
 
 #define BZ2_RB_CLOSE    1
 #define BZ2_RB_INTERNAL 2
