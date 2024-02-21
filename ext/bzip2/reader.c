@@ -4,6 +4,16 @@
 #include "reader.h"
 #include "common.h"
 
+static VALUE bz_reader_foreach_line_wrapper(VALUE arg) {
+    struct foreach_arg *actual_arg = (struct foreach_arg *)arg;
+    return bz_reader_foreach_line(actual_arg);
+}
+
+static VALUE bz_reader_i_readlines_wrapper(VALUE arg) {
+    struct foreach_arg *actual_arg = (struct foreach_arg *)arg;
+    return bz_reader_i_readlines(actual_arg);
+}
+
 void bz_str_mark(struct bz_str *bzs) {
     rb_gc_mark(bzs->str);
 }
@@ -52,7 +62,12 @@ int bz_next_available(struct bz_file *bzf, int in){
         bzf->bzs.avail_in = (int) RSTRING_LEN(bzf->in);
     }
     if ((bzf->buflen - in) < (BZ_RB_BLOCKSIZE / 2)) {
-        bzf->buf = REALLOC_N(bzf->buf, char, bzf->buflen+BZ_RB_BLOCKSIZE+1);
+          char *tmp = realloc(bzf->buf, sizeof(char) * (bzf->buflen + BZ_RB_BLOCKSIZE + 1));
+          if (!tmp) {
+              // Handle the error, for example, raise an exception
+              rb_raise(rb_eNoMemError, "Failed to allocate memory");
+          }
+          bzf->buf = tmp;
         bzf->buflen += BZ_RB_BLOCKSIZE;
         bzf->buf[bzf->buflen] = '\0';
     }
@@ -378,7 +393,13 @@ VALUE bz_reader_ungetc(VALUE obj, VALUE a) {
         bzf->bzs.next_out[0] = c;
         bzf->bzs.avail_out += 1;
     } else {
-        bzf->buf = REALLOC_N(bzf->buf, char, bzf->buflen + 2);
+char *tmp = realloc(bzf->buf, sizeof(char) * (bzf->buflen + 2));
+if (!tmp) {
+    // Handle the error, for example, raise an exception
+    rb_raise(rb_eNoMemError, "Failed to allocate memory");
+}
+bzf->buf = tmp;
+
         bzf->buf[bzf->buflen++] = c;
         bzf->buf[bzf->buflen] = '\0';
         bzf->bzs.next_out = bzf->buf;
@@ -422,7 +443,12 @@ VALUE bz_reader_ungets(VALUE obj, VALUE a) {
         MEMCPY(bzf->bzs.next_out, RSTRING_PTR(a), char, RSTRING_LEN(a));
         bzf->bzs.avail_out += (int) RSTRING_LEN(a);
     } else {
-        bzf->buf = REALLOC_N(bzf->buf, char, bzf->buflen + RSTRING_LEN(a) + 1);
+char *tmp = realloc(bzf->buf, sizeof(char) * (bzf->buflen + RSTRING_LEN(a) + 1));
+if (!tmp) {
+    // Handle the error, for example, raise an exception
+    rb_raise(rb_eNoMemError, "Failed to allocate memory");
+}
+bzf->buf = tmp;
         MEMCPY(bzf->buf + bzf->buflen, RSTRING_PTR(a), char,RSTRING_LEN(a));
         bzf->buflen += (int) RSTRING_LEN(a);
         bzf->buf[bzf->buflen] = '\0';
@@ -710,10 +736,10 @@ VALUE bz_reader_unused(VALUE obj) {
         return Qnil;
     }
     if (bzf->bzs.avail_in) {
-        res = rb_tainted_str_new(bzf->bzs.next_in, bzf->bzs.avail_in);
+        res = rb_str_new(bzf->bzs.next_in, bzf->bzs.avail_in);
         bzf->bzs.avail_in = 0;
     } else {
-        res = rb_tainted_str_new(0, 0);
+        res = rb_str_new(0, 0);
     }
     return res;
 }
@@ -918,7 +944,7 @@ VALUE bz_reader_s_foreach(int argc, VALUE *argv, VALUE obj) {
     arg.obj = rb_funcall2(obj, id_new, 1, &arg.obj);
     Data_Get_Struct(arg.obj, struct bz_file, bzf);
     bzf->flags |= BZ2_RB_CLOSE;
-    return rb_ensure(bz_reader_foreach_line, (VALUE)&arg, bz_reader_close, arg.obj);
+    return rb_ensure(bz_reader_foreach_line_wrapper, (VALUE)&arg, bz_reader_close, arg.obj);
 }
 
 VALUE bz_reader_i_readlines(struct foreach_arg *arg) {
@@ -973,7 +999,7 @@ VALUE bz_reader_s_readlines(int argc, VALUE *argv, VALUE obj) {
     arg.obj = rb_funcall2(obj, id_new, 1, &arg.obj);
     Data_Get_Struct(arg.obj, struct bz_file, bzf);
     bzf->flags |= BZ2_RB_CLOSE;
-    return rb_ensure(bz_reader_i_readlines, (VALUE)&arg, bz_reader_close, arg.obj);
+    return rb_ensure(bz_reader_i_readlines_wrapper, (VALUE)&arg, bz_reader_close, arg.obj);
 }
 
 /*

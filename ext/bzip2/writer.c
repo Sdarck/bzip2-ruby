@@ -161,11 +161,10 @@ VALUE bz_writer_close(VALUE obj) {
 
     Get_BZ2(obj, bzf);
     res = bz_writer_internal_close(bzf);
-#ifndef RUBINIUS
     if (!NIL_P(res) && (bzf->flags & BZ2_RB_INTERNAL)) {
-        RBASIC(res)->klass = rb_cString;
+        // Instead of modifying RBASIC(res)->klass, create a new String object.
+        res = rb_str_new2(StringValueCStr(res));
     }
-#endif
     return res;
 }
 
