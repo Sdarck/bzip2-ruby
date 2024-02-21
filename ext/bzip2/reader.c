@@ -884,12 +884,6 @@ VALUE bz_reader_close_bang(VALUE obj) {
     return Qnil;
 }
 
-struct foreach_arg {
-    int argc;
-    VALUE sep;
-    VALUE obj;
-};
-
 VALUE bz_reader_foreach_line(struct foreach_arg *arg) {
     VALUE str;
     int td[ASIZE], in;

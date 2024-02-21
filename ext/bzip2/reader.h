@@ -3,6 +3,13 @@
 
 #include <ruby.h>
 
+// Structure definition
+typedef struct foreach_arg {
+    int argc;
+    VALUE sep;
+    VALUE obj;
+} foreach_arg;
+
 /* Instance methods */
 VALUE bz_reader_init(int argc, VALUE *argv, VALUE obj);
 VALUE bz_reader_read(int argc, VALUE *argv, VALUE obj);
@@ -31,5 +38,9 @@ VALUE bz_reader_s_alloc(VALUE obj);
 VALUE bz_reader_s_open(int argc, VALUE *argv, VALUE obj);
 VALUE bz_reader_s_foreach(int argc, VALUE *argv, VALUE obj);
 VALUE bz_reader_s_readlines(int argc, VALUE *argv, VALUE obj);
+
+// Function prototypes that use the structure
+VALUE bz_reader_foreach_line(struct foreach_arg *arg);
+VALUE bz_reader_i_readlines(struct foreach_arg *arg);
 
 #endif
